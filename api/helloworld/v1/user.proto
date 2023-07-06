@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package api.helloworld.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "helloworld/api/helloworld/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.helloworld.v1";
+
+service User {
+	rpc CreateUser (CreateUserRequest) returns (CreateUserReply){
+		option(google.api.http)={
+			post:"/user"
+			body:"*"
+		};
+	};
+	rpc UpdateUser (UpdateUserRequest) returns (UpdateUserReply){
+		option(google.api.http)={
+			put:"/user"
+			body:"*"
+		};
+	};
+	rpc DeleteUser (DeleteUserRequest) returns (DeleteUserReply){
+		option(google.api.http)={
+			delete:"/user/{UserID}"
+		};
+	};
+	rpc GetUser (GetUserRequest) returns (GetUserReply){
+		option(google.api.http)={
+			get:"/user/{UserID}"
+		};
+	};
+	rpc ListUser (ListUserRequest) returns (ListUserReply){
+		option(google.api.http)={
+			get:"/user"
+		};
+	};
+}
+
+message CreateUserRequest {
+	string UserID=1;
+	string UserName=2;
+	string State=3;
+}
+message CreateUserReply {
+	string msg=1;
+	string code=2;
+}
+
+message UpdateUserRequest {
+	string UserID=1;
+	string UserName=2;
+	string State=3;
+}
+message UpdateUserReply {
+	string msg=1;
+	string code=2;
+}
+
+message DeleteUserRequest {
+	string UserID=1;
+}
+message DeleteUserReply{
+	string msg=1;
+	string code=2;
+}
+
+message GetUserRequest {
+	string UserID=1;
+}
+message GetUserReply {
+	message User{
+		string UserID=1;
+		string UserName=2;
+		string State=3;
+	}
+	User user =1;
+	string msg=2;
+	string code=3;
+}
+
+message ListUserRequest {}
+message ListUserReply {
+	message User{
+		string UserID=1;
+		string UserName=2;
+		string State=3;
+	}
+	repeated User user=1;
+	string msg=2;
+	string code=3;
+}
