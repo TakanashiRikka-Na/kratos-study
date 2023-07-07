@@ -1,8 +1,12 @@
 package server
 
 import (
+	"context"
+	"github.com/go-kratos/kratos/v2/middleware/selector"
+	"github.com/gorilla/handlers"
 	v1 "helloworld/api/helloworld/v1"
 	"helloworld/internal/conf"
+	"helloworld/internal/pkg/auth"
 	"helloworld/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -15,6 +19,14 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, user *servic
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
+			selector.Server(auth.AUTH()).Match(NewSkipRoutersMatcher()).Build(),
+		),
+		http.Filter(
+			handlers.CORS(
+				handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
+				handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "DELETE"}),
+				handlers.AllowedOrigins([]string{"*"}),
+			),
 		),
 	}
 	if c.Http.Network != "" {
@@ -30,4 +42,19 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, user *servic
 	v1.RegisterGreeterHTTPServer(srv, greeter)
 	v1.RegisterUserHTTPServer(srv, user)
 	return srv
+}
+
+func NewSkipRoutersMatcher() selector.MatchFunc {
+
+	skipRouters := map[string]struct{}{
+		// 可以到这加不需要鉴权的路由
+		//"/helloworld.v1.UserService/Login":        {},
+	}
+
+	return func(ctx context.Context, operation string) bool {
+		if _, ok := skipRouters[operation]; ok {
+			return false
+		}
+		return true
+	}
 }
