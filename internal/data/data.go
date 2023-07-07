@@ -1,6 +1,7 @@
 package data
 
 import (
+	"github.com/go-redis/redis"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"helloworld/internal/conf"
@@ -10,19 +11,20 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewGreeterRepo, NewDB, NewUserRepo)
+var ProviderSet = wire.NewSet(NewData, NewGreeterRepo, NewDB, NewUserRepo, NewRedisConn)
 
 // Data .
 type Data struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	Rdb *redis.Client
 }
 
 // NewData .
-func NewData(c *conf.Data, logger log.Logger, db *gorm.DB) (*Data, func(), error) {
+func NewData(c *conf.Data, logger log.Logger, db *gorm.DB, rdb *redis.Client) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
-	return &Data{DB: db}, cleanup, nil
+	return &Data{DB: db, Rdb: rdb}, cleanup, nil
 }
 
 // NewDB .
@@ -33,4 +35,8 @@ func NewDB(c *conf.Data) *gorm.DB {
 		panic(err)
 	}
 	return db
+}
+
+func NewRedisConn(c *conf.Data) *redis.Client {
+	return redis.NewClient(&redis.Options{DB: 0, Addr: c.Redis.Addr})
 }
